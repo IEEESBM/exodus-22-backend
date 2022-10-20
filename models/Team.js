@@ -9,7 +9,6 @@ const teamsSchema = new Schema({
     },
     teamMembers : {
         type: [User.schema],
-        required: true,
     },
 });
 

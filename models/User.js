@@ -4,6 +4,7 @@ const usersSchema = new Schema({
     userName: {
         type: String,
         required: true,
+        unique: true,
     },
     userID: {
         type: String,
@@ -22,6 +23,9 @@ const usersSchema = new Schema({
         unique: true,
         required: true,
     },
+    teamID: {
+        type: String,
+    }
 })
 
 const User = mongoose.model("User", usersSchema);

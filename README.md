@@ -1,1 +1,1 @@
-# Exodus 22 Backend using Strapi
+# Exodus 22 Backend 

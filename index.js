@@ -32,6 +32,7 @@ function makeid(length) {
 }
 
 app.post("/createTeam",async function(req,res){
+  
 
     const userName = req.body.userName;
     console.log(req.body.userName);
@@ -123,6 +124,41 @@ app.post('/joinTeam', (req, res) => {
     } catch(err){
         res.send("Error "+err);
     }
+});
+
+app.post("/leaveTeam", async (req, res) => {
+  const teamID = req.body.teamID;
+  const userID = req.body.userID;
+
+  try {
+    const team = await Team.find({ "teamID": teamID });
+    console.log(team);
+    if (team.length === 0) {
+      return res.status(500).json({ error: 'please enter correct team ID' })
+    }
+    if (userID === team[0].teamMembers[0].userID) {
+      res.status(500).json({ error: 'the team leader cannot leave the team' });
+      return;
+    }
+
+    // const updatedTeam = await team.teamMembers.findOneAndUpdate(
+    //   {"teamID":teamID},
+    //   { $pull: { "teamMembers": {userID:userID} } },
+    //   { new: true }
+    // );
+
+    const Updated = await Team.updateOne({teamID: teamID}, {
+      $pull: {
+        teamMembers: {userID: userID},
+      },
+    });
+    await User.updateOne({userID:userID},{$set: {teamID: ""}});
+
+    res.status(200).send(Updated);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'error' })
+  }
 });
 
 app.listen(3010, () => {

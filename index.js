@@ -141,12 +141,6 @@ app.post("/leaveTeam", async (req, res) => {
       return;
     }
 
-    // const updatedTeam = await team.teamMembers.findOneAndUpdate(
-    //   {"teamID":teamID},
-    //   { $pull: { "teamMembers": {userID:userID} } },
-    //   { new: true }
-    // );
-
     const Updated = await Team.updateOne({teamID: teamID}, {
       $pull: {
         teamMembers: {userID: userID},
@@ -158,6 +152,29 @@ app.post("/leaveTeam", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'error' })
+  }
+});
+
+app.post("/deleteTeam", async (req, res) => {
+  const teamID = req.body.teamID;
+  console.log(req.body.teamID);
+  const userId = req.body.userID;
+
+  try {
+    const team = await Team.find({ teamID: teamID });
+    if (team.length === 0) {
+      return res.status(500).json({ error: "please enter correct team ID" });
+    } else if (userId != team[0].teamMembers[0].userID) {
+      res.status(500).json({ error: "only the team leader can delete a team" });
+      return;
+    }
+    await Team.deleteOne({ teamID: teamID });
+    const userDel = await User.updateMany({teamID: teamID},{$set: {teamID: ""}});
+    res.status(200).send("team deleted");
+    console.log(userDel);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "error" });
   }
 });
 

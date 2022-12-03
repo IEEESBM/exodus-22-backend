@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const mongoUrl = "mongodb+srv://" + process.env.MONGO_UID + ":" + process.env.MONGO_UID +"@data.yqoabll.mongodb.net/?retryWrites=true&w=majority"
 
 mongoose.connect(
-    mongoUrl, 
+    mongoUrl,
     {
         useNewUrlParser: true,
     }
@@ -25,41 +25,41 @@ function makeid(length) {
     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var charactersLength = characters.length;
     for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * 
+      result += characters.charAt(Math.floor(Math.random() *
  charactersLength));
    }
    return result;
 }
 
 app.post("/createTeam",async function(req,res){
-  
+
 
     const userName = req.body.userName;
     console.log(req.body.userName);
     //console.log(req.params.userName);
-  
+
     User.find({userName:userName},function(err,userObj){
-  
+
       if(err){
         console.log(err);
       }
       else{
-  
+
         const ln = Object.keys(userObj).length;
         if(ln==0){
-  
+
           console.log(userObj);
           res.send("User does not exist");
-  
+
         }
         else{
-  
+
           Team.find({teamMembers :{$elemMatch:{userName:userName}}} ,async function(err,teamObj){
             if(err){
               console.log(err);
             }
             else{
-  
+
               //console.log(Object.keys(teamObj).length);
               const vr = Object.keys(teamObj).length;
               if(vr>0){
@@ -72,26 +72,26 @@ app.post("/createTeam",async function(req,res){
                     teamID : newTeam,
                     teamMembers : [],
                   });
-  
+
                   team.save();
                   await User.updateOne({userID: userObj[0].userID},{$set: {teamID: newTeam}});
                   await Team.updateOne({teamID: newTeam}, {$push: {teamMembers: userObj}});
-                  
+
                   res.send("team created successfully");
-  
+
                 }
                 catch(err){
                   console.log(err);
                 }
               }
             }
-  
+
           });
-  
+
         }
-  
+
       }
-  
+
     });
 });
 
@@ -176,6 +176,63 @@ app.post("/deleteTeam", async (req, res) => {
     console.log(error);
     res.status(500).json({ error: "error" });
   }
+});
+
+app.post("/submit", function(req, res){
+
+  const userId = req.query.userID;
+  const link = req.query.submitLink;
+
+  Team.find({teamMembers :{$elemMatch:{userID:userId}}}, function(err,obj){
+
+    if(err){
+      console.log(err);
+    }
+    else{
+
+      const ln = Object.keys(obj).length;
+
+      if(ln == 0){
+        console.log(obj);
+        res.send("user does not exist");
+      }
+      else{
+
+        Team.find({"teamMembers.0.userID" : userId}, function(err, firstObj){
+
+          if(err){
+            console.log(err);
+          }
+          else{
+            const len = Object.keys(firstObj).length;
+            if(len == 0){
+              res.send("team Leader can only submit");
+            }
+            else {
+              try{
+
+                const filter = {teamMembers :{$elemMatch:{userID:userId}}};
+                const update = {submitLink : link};
+                const changedTeam = Team.findOneAndUpdate(filter, update,{new: true});
+                //console.log(changedTeam);
+                res.send("submitted");
+
+              }
+              catch(err){
+                console.log(err);
+              }
+            }
+
+          }
+
+        })
+      }
+
+    }
+
+  });
+
+
 });
 
 app.listen(3010, () => {

@@ -235,6 +235,32 @@ app.post("/submit", function(req, res){
 
 });
 
+app.post("/getUser", function(req,res){
+
+  const userId = req.query.userID;
+  console.log(userId);
+
+  try{
+    User.find( {userID: userId}, function(err,obj){
+
+      const ln = Object.keys(obj).length;
+
+      if(ln == 0){
+        res.send("User not found");
+      }
+      else{
+        res.send(obj);
+      }
+
+    })
+
+  }
+  catch(err){
+    console.log(err);
+  }
+
+});
+
 app.listen(3010, () => {
     console.log("Server runnig on port 3010");
 })
